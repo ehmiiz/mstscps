@@ -1,5 +1,6 @@
 # mstscps, in development!
 Wrapper for Mstsc
+![](mstscps.gif)
 1. Install https://www.powershellgallery.com/packages/Microsoft.PowerShell.SecretManagement/
 2. Set up a keyvault (I use keepass)
 3. Import mstscps and create a Sessions.csv on a desired Path, use Set-MstscSessionPath
