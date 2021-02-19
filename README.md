@@ -1,0 +1,2 @@
+# mstscps
+Wrapper for Mstsc
