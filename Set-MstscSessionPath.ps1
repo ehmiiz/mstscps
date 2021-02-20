@@ -8,10 +8,13 @@ function Set-MstscSessionPath {
          have the headers Name;Description; in it.
     #>
         param (
-            $Path = "C:\Users\$env:USERNAME\mstscps\Sessions.csv" # My module my path :D
+            $Path
         )
         Begin {
             $Global:SessionCSV = $Path # Needs to have a check for if the user applied a supported file format (CSV)
             Write-Output "Path set: ""$Global:SessionCSV"""
+            [PSCustomObject]@{
+                Path = $Global:SessionCSV
+            } | ConvertTo-Json | Out-File $Global:ConfigPath -Force
         }
     }
