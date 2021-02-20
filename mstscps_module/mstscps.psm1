@@ -5,7 +5,7 @@ class Name : System.Management.Automation.IValidateSetValuesGenerator {
     }
 }
 function Get-MstscSession {
-<#
+    <#
 .SYNOPSIS
     Gets a list of Mstsc Sessions
 .DESCRIPTION
@@ -22,12 +22,12 @@ function Get-MstscSession {
     General notes
 #>
     param (
-        [ValidateSet([Name],ErrorMessage="Value '{0}' is invalid. Try one of: {1}")]
+        [ValidateSet([Name], ErrorMessage = "Value '{0}' is invalid. Try one of: {1}")]
         $Name
     )
 
     Begin {
-        $Sessions = Import-Csv $Global:SessionCSV -Delimiter ";"
+        $Sessions = Import-Csv $Global:ConfigData.Path -Delimiter ";"
         if ($name) {
             $Return = $Sessions | Where-Object -Property Name -eq $name
             return $Return
@@ -100,28 +100,31 @@ function Connect-MstscSession {
     }
 }
 
-    # Sets MstscSessionPath
+# Sets MstscSessionPath
 function Set-MstscSessionPath {
-<#
-.DESCRIPTION
-    Sets the path to the CSV file with Sessions
-.EXAMPLE
-    PS C:\> Set-MstscSessionpath C:\Users\MyUser\MySessions.csv
-    Sets the path to the CSV file MySessions, the file must be ";" separated and
-     have the headers Name;Description; in it.
-#>
+    <#
+    .DESCRIPTION
+        Sets the path to the CSV file with Sessions
+    .EXAMPLE
+        PS C:\> Set-MstscSessionpath C:\Users\MyUser\MySessions.csv
+        Sets the path to the CSV file MySessions, the file must be ";" separated and
+            have the headers Name;Description; in it.
+    #>
     param (
-        $Path = "C:\Users\$env:USERNAME\mstscps\Sessions.csv" # My module my path :D
+        $Path
     )
     Begin {
         $Global:SessionCSV = $Path # Needs to have a check for if the user applied a supported file format (CSV)
         Write-Output "Path set: ""$Global:SessionCSV"""
+        [PSCustomObject]@{
+            Path = $Global:SessionCSV
+        } | ConvertTo-Json | Out-File $Global:ConfigPath -Force
     }
 }
 
 # Gets MstscSesssion DataPath
 function Get-MstscSessionPath {
-<#
+    <#
 .DESCRIPTION
     Gets the path to the CSV file with Sessions
 .EXAMPLE
@@ -130,5 +133,20 @@ function Get-MstscSessionPath {
     Gets the path to the CSV file MySessions, the file must be ";" separated and
      have the headers Name;Description; in it.
 #>
-    Write-Output $Global:SessionCSV
+    Write-Output $Global:ConfigData.Path
+}
+
+$Global:ConfigPath = "$($env:APPDATA)\Powershell\Mstscps\config.json"
+$Global:ConfigData = Get-Content $Global:ConfigPath | ConvertFrom-Json
+
+if ($Global:ConfigData.Path) {
+    #Path set in config already
+    Write-Output "SessionPath is: $($Global:ConfigData.Path)"
+    $Script:SessionsPath = $Global:ConfigData.Path
+}
+else {
+    $Script:SessionsPath = "$($env:APPDATA)\Powershell\Mstscps\sessions.csv"
+    $null = New-Item $Script:SessionsPath -Force
+    $null = New-Item $Global:ConfigPath -Force
+    Set-MstscSessionPath $Script:SessionsPath
 }
