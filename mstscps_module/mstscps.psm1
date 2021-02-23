@@ -1,6 +1,6 @@
 class Name : System.Management.Automation.IValidateSetValuesGenerator {
     [String[]] GetValidValues() {
-        $Global:Name = (Import-Csv $Global:SessionCSV -Delimiter ";")
+        $Global:Name = (Import-Csv $Global:SessionsPath -Delimiter ";")
         return ($Global:Name).Name
     }
 }
@@ -23,16 +23,22 @@ function Get-MstscSession {
 #>
     param (
         [ValidateSet([Name], ErrorMessage = "Value '{0}' is invalid. Try one of: {1}")]
-        $Name
+        $Name,
+        [switch]$Edit
     )
 
     Begin {
-        $Sessions = Import-Csv $Global:ConfigData.Path -Delimiter ";"
+        
         if ($name) {
+            $Sessions = Import-Csv $Global:SessionsPath -Delimiter ";"
             $Return = $Sessions | Where-Object -Property Name -eq $name
             return $Return
         }
+        elseif ($Edit) {
+            notepad $Global:SessionsPath
+        }
         else {
+            $Sessions = Import-Csv $Global:SessionsPath -Delimiter ";"
             $Sessions
         }
     }
@@ -114,10 +120,10 @@ function Set-MstscSessionPath {
         $Path
     )
     Begin {
-        $Global:SessionCSV = $Path # Needs to have a check for if the user applied a supported file format (CSV)
-        Write-Output "Path set: ""$Global:SessionCSV"""
+        $Global:SessionsPath = $Path # Needs to have a check for if the user applied a supported file format (CSV)
+        Write-Output "Path set: ""$Global:SessionsPath"""
         [PSCustomObject]@{
-            Path = $Global:SessionCSV
+            Path = $Global:SessionsPath
         } | ConvertTo-Json | Out-File $Global:ConfigPath -Force
     }
 }
@@ -137,16 +143,16 @@ function Get-MstscSessionPath {
 }
 
 $Global:ConfigPath = "$($env:APPDATA)\Powershell\Mstscps\config.json"
-$Global:ConfigData = Get-Content $Global:ConfigPath | ConvertFrom-Json
+$Global:ConfigData = Get-Content $Global:ConfigPath -ErrorAction SilentlyContinue | ConvertFrom-Json
 
-if ($Global:ConfigData.Path) {
+if ((Test-Path $Global:ConfigData.Path -ErrorAction SilentlyContinue)) {
     #Path set in config already
     Write-Output "SessionPath is: $($Global:ConfigData.Path)"
-    $Script:SessionsPath = $Global:ConfigData.Path
+    $Global:SessionsPath = $Global:ConfigData.Path
 }
 else {
-    $Script:SessionsPath = "$($env:APPDATA)\Powershell\Mstscps\sessions.csv"
-    $null = New-Item $Script:SessionsPath -Force
+    $Global:SessionsPath = "$($env:APPDATA)\Powershell\Mstscps\sessions.csv"
+    $null = New-Item $Global:SessionsPath -Force
     $null = New-Item $Global:ConfigPath -Force
-    Set-MstscSessionPath $Script:SessionsPath
+    Set-MstscSessionPath -Path $Global:SessionsPath
 }
