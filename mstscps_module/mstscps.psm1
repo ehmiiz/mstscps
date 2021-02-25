@@ -89,17 +89,16 @@ function Connect-MstscSession {
         else {
             Write-Warning "SSO in this module is dependent on the module MS.PS.SecretMgmt"
         }
-    
 
         if ($name) {
-            Start-Process -FilePath "C:\Windows\System32\mstsc.exe" -ArgumentList "/w:1230", "/h:693", "/V:$Name"
+            Start-Process -FilePath "C:\Windows\System32\mstsc.exe" -ArgumentList "/w:1430", "/h:1000", "/V:$Name"
             Start-Sleep -Seconds 2 # to delay the removal because of mstsc delay on startup
             Start-Process -FilePath "C:\Windows\System32\cmdkey.exe" -ArgumentList "/delete:$Name"
         }
         else {
             $Name = (Get-MstscSession | Out-ConsoleGridView -Title "ServerList" -OutputMode Single).Name
             $null = cmdkey.exe /generic:$Name /user:$Private:User /pass:$Private:Password
-            Start-Process -FilePath "C:\Windows\System32\mstsc.exe" -ArgumentList "/w:1230", "/h:693", "/V:$Name"
+            Start-Process -FilePath "C:\Windows\System32\mstsc.exe" -ArgumentList "/w:1430", "/h:1000", "/V:$Name"
             Start-Sleep 2 # to delay the removal because of mstsc delay on startup
             Start-Process -FilePath "C:\Windows\System32\cmdkey.exe" -ArgumentList "/delete:$Name"
         }
