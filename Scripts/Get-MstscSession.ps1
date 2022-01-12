@@ -1,9 +1,3 @@
-class Name : System.Management.Automation.IValidateSetValuesGenerator {
-    [String[]] GetValidValues() {
-        $Global:Name = (Import-Csv $Global:SessionCSV -Delimiter ";")
-        return ($Global:Name).Name
-    }
-}
 function Get-MstscSession {
     <#
 .SYNOPSIS
