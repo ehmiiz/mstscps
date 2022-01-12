@@ -1,9 +1,4 @@
-class Name : System.Management.Automation.IValidateSetValuesGenerator {
-    [String[]] GetValidValues() {
-        $Global:Name = (Import-Csv $Global:SessionCSV -Delimiter ";")
-        return ($Global:Name).Name
-    }
-}
+
 function Connect-MstscSession {
     <#
     .SYNOPSIS
@@ -31,11 +26,10 @@ function Connect-MstscSession {
         if (Get-Module -Name Microsoft.PowerShell.SecretManagement -ListAvailable) {
             if ($Secret) {
                 try {
-                    $Private:SecretMgmtEntry = Get-Secret $Secret
-                    $Private:User = $Private:SecretMgmtEntry.UserName
-                    $Private:Password = $SecretMgmtEntry.GetNetworkCredential().Password
                     # save information using cmdkey.exe
-                    $null = cmdkey.exe /generic:$Name /user:$Private:User /pass:$Private:Password
+                    $s = Get-Secret $Secret
+                    $null = cmdkey.exe /generic:$Name /user:$Secret /pass:(ConvertFrom-SecureString $s -AsPlainText)
+                    # TODO: Make job that deletes secret in 3 sec instead of having line 50 and 56
                 }
                 catch {
                     Write-Error $Error[0]
@@ -57,7 +51,6 @@ function Connect-MstscSession {
         }
         else {
             $Name = (Get-MstscSession | Out-ConsoleGridView -Title "ServerList" -OutputMode Single).Name
-            $null = cmdkey.exe /generic:$Name /user:$Private:User /pass:$Private:Password
             Start-Process -FilePath "C:\Windows\System32\mstsc.exe" -ArgumentList "/w:1430", "/h:1000", "/V:$Name"
             Start-Sleep 2 # to delay the removal because of mstsc delay on startup
             Start-Process -FilePath "C:\Windows\System32\cmdkey.exe" -ArgumentList "/delete:$Name"

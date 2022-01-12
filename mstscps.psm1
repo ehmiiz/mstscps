@@ -13,5 +13,8 @@ foreach($import in @($Functions )){
     }
 }
 
+# Aliases
+New-Alias -Name 'tsps' -Value "Connect-MstscSession"
+
 # Export everything in the folder
 Export-ModuleMember -Function * -Cmdlet * -Alias *
